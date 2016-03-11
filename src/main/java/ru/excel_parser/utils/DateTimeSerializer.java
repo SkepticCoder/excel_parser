@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter;
  */
 public final class DateTimeSerializer extends DateSerializer {
 
-    public static final String DATE_TIME_FORMAT = "dd-M-yyyy hh:mm:ss";
+    public static final String DATE_TIME_FORMAT = "dd.MM.yyyy hh:mm:ss";
 
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
 

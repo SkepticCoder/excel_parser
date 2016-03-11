@@ -12,6 +12,7 @@ import ru.excel_parser.view.PageColumn;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -109,10 +110,10 @@ public final class ExcelParser {
 
             PageColumn column = mapColumn.get(cell.getColumnIndex());
             try {
-                column.set(page, getCellValue(cell));
+                column.set(page, getCellValue(cell, column.getCellType() == PageColumn.CELL_TYPE_DATE));
             }catch(Exception e) {
                 e.printStackTrace();
-                return Optional.empty();
+                continue;
             }
         }
 
@@ -120,13 +121,18 @@ public final class ExcelParser {
         return Optional.of(page);
     }
 
-    private static Object getCellValue(Cell cell) {
+    private static Object getCellValue(Cell cell, boolean isDate) throws ParseException {
         switch(cell.getCellType()) {
             case Cell.CELL_TYPE_NUMERIC:
-                return cell.getNumericCellValue();
+                return isDate ? cell.getDateCellValue() : cell.getNumericCellValue();
 
             case Cell.CELL_TYPE_BOOLEAN:
+                if(isDate) {
+                    throw new ParseException("Date cell type should be numeric", 0);
+                }
                 return cell.getBooleanCellValue();
+            case Cell.CELL_TYPE_STRING:
+                return !isDate ? cell.getStringCellValue() : ConcurrentDateFormat.getInstance().convertStringToDate(cell.getStringCellValue());
 
             default:
                 return cell.getStringCellValue();

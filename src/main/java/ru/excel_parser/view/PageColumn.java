@@ -6,6 +6,7 @@ import ru.excel_parser.utils.ConcurrentDateFormat;
 import ru.excel_parser.utils.SafeBiConsumer;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -19,23 +20,36 @@ public enum PageColumn implements Function<Page, Object> {
         if ((value instanceof Long)) {
             obj.setId((Long) value);
         } else if (value instanceof Double) {
-            obj.setId(((Double)value).longValue());
+            obj.setId(((Double) value).longValue());
         } else {
-                Long.valueOf(value.toString());
+            Long.valueOf(value.toString());
         }
     }
     ),
 
     NAME("name", Page::getName, (Page obj, Object value) -> obj.setName(value.toString())),
 
-    PRICE("price", Page::getPrice, (Page obj, Object value) -> obj.setPrice(new BigDecimal(value.toString().replaceAll(",", "")))),
+    PRICE("price", Page::getPrice, (Page obj, Object value) -> {
+        if (value instanceof BigDecimal) {
+            obj.setPrice((BigDecimal) value);
+            return;
+        }
 
-    DATE("date", Page::getDateTime, (Page obj, Object value) -> obj.setDateTime(ConcurrentDateFormat.getInstance().
-            convertStringToDate(value.toString())));
+        obj.setPrice(new BigDecimal(value.toString().replaceAll(",", "")));
+    }),
 
+    DATE("date", Page::getDateTime, (Page obj, Object value) -> {
+        if (value instanceof Date) {
+            obj.setDateTime((Date) value);
+            return;
+        }
+
+        obj.setDateTime(ConcurrentDateFormat.getInstance().convertStringToDate(value.toString()));
+    }, PageColumn.CELL_TYPE_DATE
+    );
+
+    public static final int CELL_TYPE_DATE = 100;
     private static final Optional<PageColumn> EMPTY = Optional.empty();
-
-
     private final Function<Page, Object> supplier;
 
     private final SafeBiConsumer<Page, Object> consumer;
